@@ -56,11 +56,13 @@ for i = 1:data.n
         poles = [poles associated_poles];
         
         %% Localise platform using trilateration.
-        two_random_poles = poles(randi(numel(poles), 2));
-        two_random_poles = global2local(two_random_poles, pose);
-        localised_local_pose = trilaterate(two_random_poles, pose(1:2));
-        localised_global_pose = local2global(localised_local_pose, pose);
-        localised_pose = [localised_pose localised_global_pose];
+        if isempty(poles) == false
+            two_random_poles = poles(randi(numel(poles), 2));
+            two_random_poles = global2local(two_random_poles, pose);
+            localised_local_pose = trilaterate(two_random_poles, pose(1:2));
+            localised_global_pose = local2global(localised_local_pose, pose);
+            localised_pose = [localised_pose localised_global_pose];
+        end
 
     elseif sensor_id == 2 % Update velocities.
         linear_velocity = data.vw(1, index);
