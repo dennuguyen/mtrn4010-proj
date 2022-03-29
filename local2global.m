@@ -1,4 +1,5 @@
-%% Transform local to global coordinates.
+% Dan Nguyen - z5206032
+% Transform local to global coordinates.
 function [global_points] = local2global(local_points, transform_vector)
     rotation = transform_vector(3);
     R = [cos(rotation) -sin(rotation); sin(rotation) cos(rotation)];

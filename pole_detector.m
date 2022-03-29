@@ -1,8 +1,11 @@
+% Dan Nguyen - z5206032
+% Detects the sweeps of poles.
 function [poles] = pole_detector(points, pole_size, point_count_threshold, max_range)
     point_pole_index = zeros(1 , length(points));
     num_points_in_cluster = 0; % Count of points within a cluster.
     
     for i = 1:(length(points) - 1)
+        % Get distance between ith and (i + 1)th point.
         distance = norm(points(:, i) - points(:, i + 1));
         
         % Cluster points that are within a max range.
