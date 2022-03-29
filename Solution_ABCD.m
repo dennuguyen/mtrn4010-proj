@@ -2,7 +2,7 @@
 % Main solution which solves parts A, B, C, D.
 
 %% Load data.
-load("data016a.mat");
+load("data015a.mat");
 
 %% Set up dynamic plot.
 figure(1)
