@@ -1,6 +1,0 @@
-function [poles] = associate_poles_with_landmarks(poles, landmarks, threshold)
-%     poles = find(any(abs(bsxfun(@minus, poles, landmarks)) < threshold));
-    for i = 1:length(landmarks)
-        for j = 1:length(
-    end
-end
