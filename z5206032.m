@@ -20,6 +20,7 @@ pose = data.pose0;
 heading = 0;
 point_clouds = [];
 poles = [];
+initial_value = data.pose0(1:2);
 localised_pose = data.pose0(1:2);
 prev_time = 0.0001 * double(data.table(1, 1));
 linear_velocity = 0;
@@ -47,20 +48,21 @@ for i = 1:data.n
         offset = [0.4 * cos(pose(3)); 0.4 * sin(pose(3)); 0];
         point_cloud = local2global(local_point_cloud, pose + offset);
         point_clouds = [point_clouds point_cloud];
-        
+
         %% Detect sweeps of poles.
-        potential_poles = pole_detector(point_cloud, [0.05 0.2], 6, 0.8);
+        potential_poles_indexes = pole_detector(point_cloud, [0.05 0.2], 6, 0.8);
 
         %% Cleans up the list of poles by data associating the sweeps of poles with given landmarks.
-        associated_poles = associate_poles_with_landmarks(potential_poles, data.Landmarks, 0.2);
-        poles = [poles associated_poles];
-        
+        associated_poles_indexes = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, 0.2);
+        poles = [poles point_cloud(:, associated_poles_indexes == 1)];
+
         %% Localise platform using trilateration.
         if isempty(poles) == false
-            two_random_poles = poles(randi(numel(poles), 2));
-            two_random_poles = global2local(two_random_poles, pose);
-            localised_local_pose = trilaterate(two_random_poles, pose(1:2));
-            localised_global_pose = local2global(localised_local_pose, pose);
+            two_random_poles_indexes = randi(numel(two_random_poles_indexes), 2);
+            two_random_ranges = ranges(two_random_poles_indexes);
+            two_random_global_poles = point_cloud(:, two_random_poles_indexes);
+            localised_global_pose = trilaterate(two_random_global_poles, two_random_ranges, initial_value);
+            initial_value = localised_global_pose;
             localised_pose = [localised_pose localised_global_pose];
         end
 
