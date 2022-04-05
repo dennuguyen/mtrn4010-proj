@@ -58,7 +58,7 @@ for i = 1:data.n
 
         %% Localise platform using trilateration.
         if isempty(poles) == false
-            two_random_poles_indexes = randi(numel(two_random_poles_indexes), 2);
+            two_random_poles_indexes = randi(numel(associated_poles_indexes), 2);
             two_random_ranges = ranges(two_random_poles_indexes);
             two_random_global_poles = point_cloud(:, two_random_poles_indexes);
             localised_global_pose = trilaterate(two_random_global_poles, two_random_ranges, initial_value);
