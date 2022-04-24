@@ -132,7 +132,21 @@ The initial value of the states is obtained from `data.pose0`.
 
 ### 2. Predict Next State
 
-We first need to calculate the Jacobian matrices for the linear transformation from the current to next state given the current state and current input:
+The process model for an Ackermann vehicle is:
+$$
+\begin{aligned}
+f &=
+\left(
+    \begin{matrix}
+        x + v \cdot cos\theta \cdot dt \\ y + v \cdot sin\theta \cdot dt \\ \phi + w \cdot dt
+    \end{matrix}
+\right) &\text{ : process model}
+\end{aligned}
+$$
+
+The process model can be thought of as the transformation of the vehicle's pose from one state to the next.
+
+We first need to calculate the Jacobian matrices for the process model given the current state and current input:
 $$
 \begin{aligned}
 J(k + 1 | k) &=&
