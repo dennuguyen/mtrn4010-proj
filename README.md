@@ -86,7 +86,7 @@ $$
 sd_{x} &=& 0 \; ms^{-1} &\text{ : standard deviation of x in global coordinate frame} \\
 sd_{y} &=& 0 \; ms^{-1} &\text{ : standard deviation of y in global coordinate frame} \\
 sd_{\phi} &=& 0 \; ms^{-1} &\text{ : standard deviation of heading in global coordinate frame} \\
-sd_{speed} &=& 0.05 \; ms^{-1} &\text{ : standard deviation of velocity sensor} \\
+sd_{speed} &=& 0.05 \; ms^{-1} &\text{ : standard deviation of velocity measurement} \\
 sd_{gyro} &=& 1 \; degree \; s^{-1} &\text{ : standard deviation of gyroscope measurement} \\
 sd_{range} &=& 0.1 \; ms^{-1} &\text{ : standard deviation of range observation} \\
 sd_{bearing} &=& 2 \; degree \; s^{-1} &\text{ : standard deviation of bearing observation} \\
