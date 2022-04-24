@@ -13,14 +13,13 @@ heading_plot = plot(-7, -7, 'm*');
 point_cloud_plot = plot(-7, -7, 'r.');
 poles_plot = plot(-7, -7, 'ko');
 localised_pose_plot = plot(-7, -7, 'g+');
-axis([-5, 20, -5, 20])
+% axis([-5, 20, -5, 20])
 
 %% Validation.
 verified_poses = data.verify.poseL;
 plot(verified_poses(1, :), verified_poses(2, :), '.', 'color', '#DCDCDC')
 
 %% Initial data.
-pose = data.pose0;
 heading = 0;
 point_clouds = [];
 poles = [];
@@ -40,8 +39,11 @@ sd_gyro = deg2rad(1);
 sd_range = 0.1;
 sd_bearing = deg2rad(2);
 
-predicted_state = data.pose0;
+gyroscope_bias = 0;
+angular_velocities = [];
+
 updated_state = data.pose0;
+predicted_state = data.pose0;
 states = [];
 states_plot = plot(-7, -7, 'g+');
 
@@ -60,20 +62,17 @@ for i = 1:data.n
     prev_time = next_time;
     
     %% Calculate pose.
-%     pose = ackermann_dead_reckoning(pose, linear_velocity, angular_velocity, change_in_time);
-%     heading = 2 * [cos(pose(3)); sin(pose(3))] + [pose(1); pose(2)];
-    
-    %% Predict next state.
-    [predicted_state, state_covariance] = predict_next_state(predicted_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity, angular_velocity);
-    heading = 2 * [cos(predicted_state(3)); sin(predicted_state(3))] + [predicted_state(1); predicted_state(2)];
+    updated_state = ackermann_dead_reckoning(updated_state, linear_velocity, angular_velocity, change_in_time);
+    heading = 2 * [cos(updated_state(3)); sin(updated_state(3))] + [updated_state(1); updated_state(2)];
 
     %% Read sensor data.
-    if sensor_id == 1 % Update pose.
+    if sensor_id == 1 % Update pose.   
+        %% Process point cloud.
         ranges = data.scans(:, index);
         [ranges, angles] = ranges2polar(ranges, 0.01, [-80, 80], 0.5, [1, 20]);
         local_point_cloud = polar2cartesian(ranges, angles);
-        offset = [0.4 * cos(predicted_state(3)); 0.4 * sin(predicted_state(3)); 0];
-        point_cloud = local2global(local_point_cloud, predicted_state + offset);
+        offset = [0.4 * cos(updated_state(3)); 0.4 * sin(updated_state(3)); 0];
+        point_cloud = local2global(local_point_cloud, updated_state + offset);
         point_clouds = [point_clouds point_cloud];
 
         %% Detect sweeps of poles.
@@ -85,6 +84,9 @@ for i = 1:data.n
 
         %% Localise platform using EKF.
         if isempty(poles) == false
+            %% Predict next state.
+            [predicted_state, state_covariance] = predict_next_state(updated_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity, angular_velocity);
+            
             %% Get the innovation for the EKF.
             one_random_pole_index = randi(numel(associated_poles_indexes), 1);
             true_observation = data.Landmarks(:, index_map(one_random_pole_index));
@@ -109,6 +111,13 @@ for i = 1:data.n
     elseif sensor_id == 2 % Update velocities.
         linear_velocity = data.vw(1, index);
         angular_velocity = data.vw(2, index);
+        
+        if i < 700
+            angular_velocities = [angular_velocities angular_velocity];
+            gyroscope_bias = mean(angular_velocities);
+        else
+            angular_velocity = angular_velocity + gyroscope_bias;
+        end
     else
         disp("Not valid sensor_id")
     end

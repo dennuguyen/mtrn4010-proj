@@ -4,8 +4,7 @@ function [X, P] = predict_next_state(X, P, Pu, dt, v, w)
     Ju = [dt * cos(X(3)) 0; dt * sin(X(3)) 0; 0 dt];
     
     %% Calculate expected value of the state in next time step.
-    dX = [v * cos(X(3)); v * sin(X(3)); w];
-    X = J * (X + dt * dX);
+    X = J * X;
     
     %% Calculate the covariance matrix of the state in next time step.
     Q = J * P * J';
