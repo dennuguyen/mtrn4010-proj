@@ -15,6 +15,10 @@ poles_plot = plot(-7, -7, 'ko');
 localised_pose_plot = plot(-7, -7, 'g+');
 axis([-5, 20, -5, 20])
 
+%% Validation.
+verified_poses = data.verify.poseL;
+plot(verified_poses(1, :), verified_poses(2, :), '.', 'color', '#DCDCDC')
+
 %% Initial data.
 pose = data.pose0;
 heading = 0;
@@ -28,12 +32,20 @@ angular_velocity = 0;
 
 %% Initial data for EKF.
 
+sd_x = 0;
+sd_y = 0;
+sd_h = 0;
 sd_speed = 0.05;
 sd_gyro = deg2rad(1);
 sd_range = 0.1;
 sd_bearing = deg2rad(2);
 
-state_covariance = [0 0 0; 0 0 0; 0 0 0];
+predicted_state = data.pose0;
+updated_state = data.pose0;
+states = [];
+states_plot = plot(-7, -7, 'g+');
+
+state_covariance = [sd_x^2 0 0; 0 sd_y^2 0; 0 0 sd_h^2];
 input_noise_covariance = [sd_speed^2 0; 0 sd_gyro^2];
 observation_noise_covariance = [sd_range^2 0; 0 sd_bearing^2];
 
@@ -47,17 +59,21 @@ for i = 1:data.n
     change_in_time = next_time - prev_time;
     prev_time = next_time;
     
-    %% Predict next state.
-    [pose, state_covariance] = predict_next_state(pose, state_covariance, input_noise_covariance, change_in_time, linear_velocity, pose(3));
-    heading = 2 * [cos(pose(3)); sin(pose(3))] + [pose(1); pose(2)];
+    %% Calculate pose.
+%     pose = ackermann_dead_reckoning(pose, linear_velocity, angular_velocity, change_in_time);
+%     heading = 2 * [cos(pose(3)); sin(pose(3))] + [pose(1); pose(2)];
     
+    %% Predict next state.
+    [predicted_state, state_covariance] = predict_next_state(predicted_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity, angular_velocity);
+    heading = 2 * [cos(predicted_state(3)); sin(predicted_state(3))] + [predicted_state(1); predicted_state(2)];
+
     %% Read sensor data.
     if sensor_id == 1 % Update pose.
         ranges = data.scans(:, index);
         [ranges, angles] = ranges2polar(ranges, 0.01, [-80, 80], 0.5, [1, 20]);
         local_point_cloud = polar2cartesian(ranges, angles);
-        offset = [0.4 * cos(pose(3)); 0.4 * sin(pose(3)); 0];
-        point_cloud = local2global(local_point_cloud, pose + offset);
+        offset = [0.4 * cos(predicted_state(3)); 0.4 * sin(predicted_state(3)); 0];
+        point_cloud = local2global(local_point_cloud, predicted_state + offset);
         point_clouds = [point_clouds point_cloud];
 
         %% Detect sweeps of poles.
@@ -67,16 +83,17 @@ for i = 1:data.n
         [associated_poles_indexes, index_map] = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, 0.2);
         poles = [poles point_cloud(:, associated_poles_indexes == 1)];
 
-        %% Perform the EKF.
+        %% Localise platform using EKF.
         if isempty(poles) == false
             %% Get the innovation for the EKF.
             one_random_pole_index = randi(numel(associated_poles_indexes), 1);
             true_observation = data.Landmarks(:, index_map(one_random_pole_index));
             measured_observation = point_cloud(:, one_random_pole_index);
-            [innovation, innovation_jacobian, innovation_covariance] = innovate(pose, state_covariance, true_observation, measured_observation, observation_noise_covariance);
+            [innovation, innovation_jacobian, innovation_covariance] = innovate(predicted_state, state_covariance, true_observation, measured_observation, observation_noise_covariance);
             
             %% Perform the KF.
-            kalman_filter(pose, state_covariance, innovation, innovation_jacobian, innovation_covariance);
+            [updated_state, state_covariance] = kalman_filter(predicted_state, state_covariance, innovation, innovation_jacobian, innovation_covariance);
+            states = [states updated_state];
         end
 
         %% Localise platform using trilateration.
@@ -88,9 +105,6 @@ for i = 1:data.n
 %             initial_value = localised_global_pose;
 %             localised_pose = [localised_pose localised_global_pose];
 %         end
-        
-        %% Perform EKF for pose.
-        
 
     elseif sensor_id == 2 % Update velocities.
         linear_velocity = data.vw(1, index);
@@ -100,11 +114,12 @@ for i = 1:data.n
     end
     
     %% Update dynamic plot.
-    plot_and_check_empty(pose_plot, pose);
+    plot_and_check_empty(pose_plot, updated_state);
     plot_and_check_empty(heading_plot, heading);
     plot_and_check_empty(point_cloud_plot, point_clouds);
     plot_and_check_empty(poles_plot, poles);
     plot_and_check_empty(localised_pose_plot, localised_pose);
+    plot_and_check_empty(states_plot, states);
     pause(0.001)
 end
 
