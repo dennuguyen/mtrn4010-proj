@@ -1,7 +1,5 @@
-% Dan Nguyen - z5206032
-function [X, P] = kalman_filter(X, P, H, R, Z)
-    S = R + H*P*H';
-    K = P*H'*inv(S);
-    P = P - K*H*P;
-    X = X + K*Z;
+function [state_vector, state_covariance] = kalman_filter(state_vector, state_covariance, innovation, innovation_jacobian, innovation_covariance)
+    K = state_covariance * innovation_jacobian' / innovation_covariance;
+    state_vector = state_vector + K * innovation;
+    state_covariance = (eye(size(state_covariance)) - K * innovation_jacobian) * state_covariance;
 end
