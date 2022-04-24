@@ -12,8 +12,8 @@ function [innovation, innovation_jacobian, innovation_covariance] = innovate(sta
     %% Calculate Jacobian matrix of observation model.
     dx = state_vector(1) - true_observation(1);
     dy = state_vector(2) - true_observation(2);
-    innovation_jacobian = [dx / polar_true_observation(1), dy / polar_true_observation(1), 0;
-         -dy / polar_true_observation(1)^2, dx / polar_true_observation(1)^2, -1];
+    innovation_jacobian = [dx / polar_true_observation(1), dy / polar_true_observation(1), 0, 0;
+                           -dy / polar_true_observation(1)^2, dx / polar_true_observation(1)^2, -1, 0];
 
     %% Calculate innovation covariance.
     innovation_covariance = innovation_jacobian * state_covariance * innovation_jacobian' + observation_noise_covariance;

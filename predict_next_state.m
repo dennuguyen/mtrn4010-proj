@@ -1,7 +1,7 @@
-function [X, P] = predict_next_state(X, P, Pu, dt, v, w)
+function [X, P] = predict_next_state(X, P, Pu, dt, v)
     %% Calculate Jacobian matrices for transformation from current to next state.
-    J = [1 0 -dt * v * sin(X(3)); 0 1 dt * v * cos(X(3)); 0 0 1];
-    Ju = [dt * cos(X(3)) 0; dt * sin(X(3)) 0; 0 dt];
+    J = [1 0 -dt * v * sin(X(3)) 0; 0 1 dt * v * cos(X(3)) 0; 0 0 1 dt; 0 0 0 1];
+    Ju = [dt * cos(X(3)) 0; dt * sin(X(3)) 0; 0 dt; 0 0];
     
     %% Calculate expected value of the state in next time step.
     X = J * X;

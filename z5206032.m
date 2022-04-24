@@ -38,17 +38,16 @@ sd_gyro = deg2rad(1);
 sd_range = 0.1;
 sd_bearing = deg2rad(2);
 
-gyroscope_bias = 0;
-angular_velocities = [];
-
-updated_state = data.pose0;
-predicted_state = data.pose0;
+updated_state = [data.pose0; 0];
+predicted_state = [data.pose0; 0];
 states = [];
 states_plot = plot(-7, -7, 'g+');
 
-state_covariance = [sd_x^2 0 0; 0 sd_y^2 0; 0 0 sd_h^2];
-input_noise_covariance = [sd_speed^2 0; 0 sd_gyro^2];
-observation_noise_covariance = [sd_range^2 0; 0 sd_bearing^2];
+state_covariance = diag([sd_x^2 sd_y^2 sd_h^2 sd_bearing^2]);
+input_noise_covariance = diag([sd_speed^2 sd_gyro^2]);
+observation_noise_covariance = diag([sd_range^2 sd_bearing^2]);
+
+seen_landmarks = zeros(1, length(data.Landmarks));
 
 for i = 1:data.n
     %% Get data for this iteration.
@@ -71,14 +70,14 @@ for i = 1:data.n
         [ranges, angles] = ranges2polar(ranges, 0.01, [-80, 80], 0.5, [1, 20]);
         local_point_cloud = polar2cartesian(ranges, angles);
         offset = [0.4 * cos(updated_state(3)); 0.4 * sin(updated_state(3)); 0];
-        point_cloud = local2global(local_point_cloud, updated_state + offset);
+        point_cloud = local2global(local_point_cloud, updated_state(1:3) + offset);
         point_clouds = [point_clouds point_cloud];
 
         %% Detect sweeps of poles.
         potential_poles_indexes = pole_detector(point_cloud, [0.05 0.2], 6, 0.8);
 
         %% Cleans up the list of poles by data associating the sweeps of poles with given landmarks.
-        [associated_poles_indexes, index_map] = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, 0.2);
+        [associated_poles_indexes, index_map, seen_landmarks] = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, seen_landmarks, 0.9);
         only_associated_poles_indexes = find(associated_poles_indexes == 1);
         poles = [poles point_cloud(:, only_associated_poles_indexes)];
 
@@ -86,7 +85,7 @@ for i = 1:data.n
         if isempty(poles) == false
             for i = 1:length(only_associated_poles_indexes)
                 %% Predict next state.
-                [predicted_state, state_covariance] = predict_next_state(updated_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity, angular_velocity);
+                [predicted_state, state_covariance] = predict_next_state(updated_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity);
 
                 %% Get the innovation for the EKF.
                 true_observation = data.Landmarks(:, index_map(only_associated_poles_indexes(i)));
@@ -112,13 +111,6 @@ for i = 1:data.n
     elseif sensor_id == 2 % Update velocities.
         linear_velocity = data.vw(1, index);
         angular_velocity = data.vw(2, index);
-        
-%         if i < 700
-%             angular_velocities = [angular_velocities angular_velocity];
-%             gyroscope_bias = mean(angular_velocities);
-%         else
-%             angular_velocity = angular_velocity + gyroscope_bias;
-%         end
     else
         disp("Not valid sensor_id")
     end
