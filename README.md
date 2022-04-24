@@ -186,13 +186,15 @@ The innovation is the difference between the observed value of a variable and pr
 
 $$
 \begin{aligned}
-U(k + 1) &=& \left(\begin{matrix} r \\ \alpha \end{matrix}\right) &\text{ : true observation} \\\\
-h(X(k + 1 | k)) &=& \left(\begin{matrix} r \\ \alpha \end{matrix}\right) = \left(\begin{matrix} \sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}} \\ atan2(y_{k} - y, x_{k} - x) - \phi \end{matrix}\right) &\text{ : predicted observation} \\\\
+U(k + 1) &=& \left(\begin{matrix} r_{t} \\ \alpha_{t} \end{matrix}\right) = \left(\begin{matrix} \sqrt{(x - x_{t})^{2} + (y - y_{t})^{2}} \\ atan2(y_{t} - y, x_{t} - x) - \phi \end{matrix}\right) &\text{ : true observation} \\\\
+h(X(k + 1 | k)) &=& \left(\begin{matrix} r_{p} \\ \alpha_{p} \end{matrix}\right) = \left(\begin{matrix} \sqrt{(x - x_{p})^{2} + (y - y_{p})^{2}} \\ atan2(y_{p} - y, x_{p} - x) - \phi \end{matrix}\right) &\text{ : predicted observation} \\\\
 Z(k + 1) &=& U(k + 1) - h(X(k + 1 | k)) &\text{ : innovation}
 \end{aligned}
 $$
 
-The true observation is obtained from `data.Landmarks`. The predicted observation is obtained from processing `data.scans` with the state when the trilateration and triangulation is performed.
+The true observation, $(r_{t}, \alpha_{t})$, is obtained from `data.Landmarks` where $(x_{t}, y_{t})$ is the cartesian coordinate of the true observation in the global coordinate frame.
+
+The predicted observation, $(r_{p}, \alpha_{p})$, is obtained from processing `data.scans` where $(x_{p}, y_{p})$ is the cartesian coordinate of the predicted observation in the global coordinate frame.
 
 The innovation is calculated after the data association step between the true and predicted observations.
 
@@ -204,7 +206,7 @@ $$
 H(k + 1 | k) &=& \left. \frac{\partial h}{\partial x} \right|_{x = X(k + 1 | k)} =
 \left(
     \begin{matrix}
-        \frac{x - x_{k}}{\sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}}} & \frac{y - y_{k}}{\sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}}} & 0
+        \frac{x - x_{k}}{\sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}}} & \frac{y - y_{k}}{\sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}}} & 0 \\ -\frac{y - y_{k}}{(x - x_{k})^{2} + (y - y_{k})^{2}} & \frac{x - x_{k}}{(x - x_{k})^{2} + (y - y_{k})^{2}} & -1 
     \end{matrix}
 \right) &\text{ : Jacobian matrix of observation model given a state} \\\\
 S(k + 1) &=& H(k + 1)P(k + 1 | k)H(k + 1)^{T} + R(k + 1) &\text{ : innovation covariance}
