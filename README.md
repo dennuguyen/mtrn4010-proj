@@ -78,7 +78,7 @@ $$
 
 ## EKF Algorithm
 
-### 1. Get Initial values
+### 1. Get Initial Values
 
 We are given some standard deviations:
 $$
