@@ -1,0 +1,15 @@
+function [Z, H, S] = innovate(X, true_observation, measured_observation, R)
+    dx = X(1) - measured_observation(1);
+    dy = X(2) - measured_observation(2);
+    range = sqrt(dx^2 + dy^2);
+
+    %% Calculate innovation.
+    U = 
+    Z = U - u;
+
+    %% Calculate Jacobian matrix of observation model.
+    H = [dx / range, dy / range, 0];
+
+    %% Calculate innovation covariance.
+    S = H * P * H' + R;
+end

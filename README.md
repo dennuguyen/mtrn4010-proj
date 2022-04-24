@@ -186,15 +186,15 @@ The innovation is the difference between the observed value of a variable and pr
 
 $$
 \begin{aligned}
-U(k + 1) &=& \left(\begin{matrix} r \\ \alpha \end{matrix}\right) &\text{ : inputted observation} \\\\
+U(k + 1) &=& \left(\begin{matrix} r \\ \alpha \end{matrix}\right) &\text{ : true observation} \\\\
 h(X(k + 1 | k)) &=& \left(\begin{matrix} r \\ \alpha \end{matrix}\right) = \left(\begin{matrix} \sqrt{(x - x_{k})^{2} + (y - y_{k})^{2}} \\ atan2(y_{k} - y, x_{k} - x) - \phi \end{matrix}\right) &\text{ : predicted observation} \\\\
 Z(k + 1) &=& U(k + 1) - h(X(k + 1 | k)) &\text{ : innovation}
 \end{aligned}
 $$
 
-The inputted observation is obtained from `data.Landmarks`. The predicted observation is obtained from processing `data.scans` with the state when the trilateration and triangulation is performed.
+The true observation is obtained from `data.Landmarks`. The predicted observation is obtained from processing `data.scans` with the state when the trilateration and triangulation is performed.
 
-The innovation is calculated after the data association step between the inputted and predicted observations.
+The innovation is calculated after the data association step between the true and predicted observations.
 
 > Why do we need the innovation? Because it is used to tune the predicted state vector closer to its true value.
 

@@ -70,10 +70,12 @@ for i = 1:data.n
         
         %% Get the innovation for the EKF.
         one_random_pole_index = randi(numel(associated_poles_indexes), 1);
-        true_observation = data.Landmarks(:, one_random_pole_index);
-        predicted_observation = predict_observation(point_cloud(:, one_random_pole_index));
-        innovate(pose, true_observation, measured_observation, observation_noise_covariance);
+        innovate(pose, true_observation, predicted_observation, observation_noise_covariance);
+        
+        U = observation_model(pose, true_observation);
 
+        u = [ranges(one_random_pole_index) angles(one_random_pole_index)];
+        
         %% Localise platform using trilateration.
 %         if isempty(poles) == false
 %             two_random_poles_indexes = randi(numel(associated_poles_indexes), 2);
