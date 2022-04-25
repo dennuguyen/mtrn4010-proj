@@ -278,3 +278,10 @@ flowchart LR
 
     5
 ```
+
+## Cost Function
+
+The cost function aka loss or error function maps a set of values to a cost.
+
+An algorithm incorporating the cost function can be optimised if the cost function is minimised.
+

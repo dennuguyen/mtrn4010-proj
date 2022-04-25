@@ -1,4 +1,4 @@
-% Dan Nguyen - z5206032
+% Dan Nguyen - z5206032 - 25/04/2022
 % Detects the sweeps of poles.
 function [indexes] = pole_detector(points, pole_size, point_count_threshold, max_range)
     num_points_in_cluster = 0; % Count of points within a cluster.

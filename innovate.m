@@ -1,4 +1,6 @@
-%
+% Dan Nguyen - z5206032 - 25/04/2022
+% Calculates the innovation for the EKF.
+% 
 % true_observation is the landmark in the GCF.
 % measured_observation is the measured landmark in the GCF.
 function [innovation, innovation_jacobian, innovation_covariance] = innovate(state_vector, state_covariance, true_observation, measured_observation, observation_noise_covariance)

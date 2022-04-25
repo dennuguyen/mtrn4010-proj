@@ -1,4 +1,4 @@
-% Dan Nguyen - z5206032
+% Dan Nguyen - z5206032 - 25/04/2022
 % Convert LiDAR ranges to polar coordinates.
 function [magnitudes, angles] = ranges2polar(ranges, unit_conversion, field_of_view, angular_resolution, thresholds)
     magnitudes = double(ranges) * unit_conversion;

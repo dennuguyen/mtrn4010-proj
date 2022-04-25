@@ -1,4 +1,4 @@
-% Dan Nguyen - z5206032
+% Dan Nguyen - z5206032 - 25/04/2022
 % Computes the trilateration of two given points.
 function [pose] = trilaterate(marks, ranges, initial_value)
     marks = double(marks);

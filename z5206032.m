@@ -1,5 +1,17 @@
 % Dan Nguyen - z5206032
-% Main solution which solves parts A, B, C, D.
+%
+% ISSUES:
+% 
+% The accumulated drift that occurs as the program runs is due to project 1
+% code not being verified against noisy data. Too late to change anything
+% now. If the segmentation and data association algorithm is fixed then I am 90%
+% sure that part B will work correctly.
+% 
+% Part C bias is wrong.
+%
+% The submission instructions should have been in the specification because
+% I don't have time to refactor everything into PartA.m, PartB.m, PartC.m wtf
+% Part B and C is in this file.
 
 %% Load data.
 load("data019b.mat");
@@ -29,12 +41,12 @@ linear_velocity = 0;
 angular_velocity = 0;
 
 %% Initial data for EKF.
-
 sd_x = 0;
 sd_y = 0;
 sd_h = 0;
 sd_speed = 0.05;
 sd_gyro = deg2rad(1);
+sd_bias = deg2rad(2);
 sd_range = 0.1;
 sd_bearing = deg2rad(2);
 
@@ -43,11 +55,17 @@ predicted_state = [data.pose0; 0];
 states = [];
 states_plot = plot(-7, -7, 'g+');
 
-state_covariance = diag([sd_x^2 sd_y^2 sd_h^2 sd_bearing^2]);
+state_covariance = diag([sd_x^2 sd_y^2 sd_h^2 sd_bias^2]);
 input_noise_covariance = diag([sd_speed^2 sd_gyro^2]);
 observation_noise_covariance = diag([sd_range^2 sd_bearing^2]);
+process_noise_covariance = zeros(4);
 
-seen_landmarks = zeros(1, length(data.Landmarks));
+% [seen_flag; truth_observed_landmark_pair]
+landmark_details = cell(2, length(data.Landmarks));
+
+%% Initial data for cost function.
+error = 0;
+j = 1;
 
 for i = 1:data.n
     %% Get data for this iteration.
@@ -74,10 +92,10 @@ for i = 1:data.n
         point_clouds = [point_clouds point_cloud];
 
         %% Detect sweeps of poles.
-        potential_poles_indexes = pole_detector(point_cloud, [0.05 0.2], 6, 0.8);
+        potential_poles_indexes = pole_detector(point_cloud, [0.05 0.2], 12, 0.8);
 
         %% Cleans up the list of poles by data associating the sweeps of poles with given landmarks.
-        [associated_poles_indexes, index_map, seen_landmarks] = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, seen_landmarks, 0.9);
+        [associated_poles_indexes, index_map, landmark_details] = associate_poles_with_landmarks(point_cloud, potential_poles_indexes, data.Landmarks, landmark_details, 0.9);
         only_associated_poles_indexes = find(associated_poles_indexes == 1);
         poles = [poles point_cloud(:, only_associated_poles_indexes)];
 
@@ -85,7 +103,7 @@ for i = 1:data.n
         if isempty(poles) == false
             for i = 1:length(only_associated_poles_indexes)
                 %% Predict next state.
-                [predicted_state, state_covariance] = predict_next_state(updated_state, state_covariance, input_noise_covariance, change_in_time, linear_velocity);
+                [predicted_state, state_covariance] = predict_next_state(updated_state, state_covariance, input_noise_covariance, process_noise_covariance, change_in_time, linear_velocity);
 
                 %% Get the innovation for the EKF.
                 true_observation = data.Landmarks(:, index_map(only_associated_poles_indexes(i)));
@@ -96,6 +114,11 @@ for i = 1:data.n
                 [updated_state, state_covariance] = kalman_filter(predicted_state, state_covariance, innovation, innovation_jacobian, innovation_covariance);
             end
             states = [states updated_state];
+
+            %% Calculate the gyroscope bias using a cost function.
+            cost = @(guess) landmark_cost(guess, updated_state, landmark_details, change_in_time);
+            [bias, fval] = fminsearch(cost, 0);
+%             fprintf("Part B Bias: %d \t Part C Bias: %d\n", updated_state(4), bias);
         end
 
         %% Localise platform using trilateration.
@@ -114,7 +137,7 @@ for i = 1:data.n
     else
         disp("Not valid sensor_id")
     end
-    
+
     %% Update dynamic plot.
     plot_and_check_empty(pose_plot, updated_state);
     plot_and_check_empty(heading_plot, heading);
@@ -122,7 +145,7 @@ for i = 1:data.n
     plot_and_check_empty(poles_plot, poles);
     plot_and_check_empty(localised_pose_plot, localised_pose);
     plot_and_check_empty(states_plot, states);
-    pause(0.001)
+%     pause(0.001)
 end
 
 function plot_and_check_empty(handle, vec)

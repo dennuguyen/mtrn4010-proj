@@ -1,4 +1,4 @@
-% Dan Nguyen - z5206032
+% Dan Nguyen - z5206032 - 25/04/2022
 % Transform polar to cartesian coordinates.
 function [cartesian_points] = polar2cartesian(lidar_ranges, lidar_angles)
     x = lidar_ranges .* cos(lidar_angles);
