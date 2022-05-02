@@ -146,6 +146,8 @@ $$
 
 The process model can be thought of as the transformation of the vehicle's pose from one state to the next.
 
+> It is very important to note that $X(k | k)$ needs to be updated using the process model before the prediction is made.
+
 We first need to calculate the Jacobian matrices for the process model given the current state and current input:
 $$
 \begin{aligned}
